@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">MediaCodecDemo</string>
+
+    <string name="main_button_start">"Start"</string>
+    <string name="main_button_stop">"Stop"</string>
+
+    <string name="main_button_surface_view">"SurfaceView"</string>
+    <string name="main_button_texture_view">"TextureView"</string>
+    <string name="main_button_no_view">"NoView"</string>
+    <string name="main_button_remove" translatable="false">"X"</string>
+
+</resources>

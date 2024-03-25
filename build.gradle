@@ -1,0 +1,52 @@
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        google()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'
+    }
+}
+
+allprojects {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        google()
+    }
+
+    def androidCommon = {
+        android {
+            compileSdk 34
+            compileOptions {
+                sourceCompatibility JavaVersion.VERSION_1_8
+                targetCompatibility JavaVersion.VERSION_1_8
+            }
+            defaultConfig {
+                multiDexEnabled = true
+            }
+        }
+    }
+
+    plugins.withId('com.android.library') {
+        androidCommon()
+    }
+    plugins.withId('com.android.application') {
+        androidCommon()
+    }
+
+    afterEvaluate { // Make sure load project.version from projects
+        plugins.withId('maven-publish') {
+            publishing {
+                repositories {
+                    maven { url rootProject.file('release') }
+                }
+            }
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

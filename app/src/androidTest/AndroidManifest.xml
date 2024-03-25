@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- For write h264 sample frames on SDCard -->
+    <!-- Run on Android6.0+ device need grant the runtime permission manually -->
+    <!-- adb shell pm grant com.splashtop.proto.mediacodec.test android.permission.WRITE_EXTERNAL_STORAGE -->
+    <!-- adb shell pm grant com.splashtop.proto.mediacodec.test android.permission.READ_EXTERNAL_STORAGE -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <application android:requestLegacyExternalStorage="true" />
+
+</manifest>

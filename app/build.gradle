@@ -1,0 +1,166 @@
+apply plugin: 'com.android.application'
+apply plugin: 'maven-publish'
+
+version '1.4-SNAPSHOT'
+
+android {
+    namespace "com.splashtop.demo"
+
+    compileSdk 33
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+    }
+
+    defaultConfig {
+        applicationId "com.splashtop.proto.mediacodec"
+
+        minSdk 16
+        targetSdk 33
+
+        versionCode Integer.parseInt("123")
+        versionName project.version
+
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+    packagingOptions {
+        exclude "META-INF/*"
+    }
+
+    signingConfigs {
+        splashtop {}
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            //signingConfig signingConfigs.splashtop
+        }
+        debug {
+            versionNameSuffix '.debug'
+        }
+    }
+
+    testOptions {
+        unitTests.includeAndroidResources true
+        unitTests.returnDefaultValues true
+    }
+
+    flavorDimensions = [ "product" ]
+    productFlavors {
+        ios9 {
+            dimension "product"
+            buildConfigField "int", "H264_WIDTH",    '720'
+            buildConfigField "int", "H264_HEIGHT",   '1280'
+            buildConfigField "String", "H264_DATA",  '"iphone6_9.3.h264"'
+            buildConfigField "String", "H264_INDEX", '"iphone6_9.3.index"'
+        }
+        ios10 {
+            dimension "product"
+            buildConfigField "int", "H264_WIDTH",    '720'
+            buildConfigField "int", "H264_HEIGHT",   '1280'
+            buildConfigField "String", "H264_DATA",  '"iphone7_10.2.h264"'
+            buildConfigField "String", "H264_INDEX", '"iphone7_10.2.index"'
+        }
+        ios14 {
+            dimension "product"
+            buildConfigField "int", "H264_WIDTH",    '998'
+            buildConfigField "int", "H264_HEIGHT",   '2160'
+            buildConfigField "String", "H264_DATA",  '"iphone_xs_max_998x2160_14.4.2.h264"'
+            buildConfigField "String", "H264_INDEX", '"iphone_xs_max_998x2160_14.4.2.index"'
+        }
+        mix2 {
+            dimension "product"
+            buildConfigField "int", "H264_WIDTH",    '360'
+            buildConfigField "int", "H264_HEIGHT",   '720'
+            buildConfigField "String", "H264_DATA",  '"mix2.h264"'
+            buildConfigField "String", "H264_INDEX", '"mix2.index"'
+        }
+        m1 {
+            dimension "product"
+            buildConfigField "int", "H264_WIDTH",    '1920'
+            buildConfigField "int", "H264_HEIGHT",   '1080'
+            buildConfigField "String", "H264_DATA",  '"m1.h264"'
+            buildConfigField "String", "H264_INDEX", '"m1.index"'
+        }
+        benchmark {
+            dimension "product"
+            buildConfigField "int", "H264_WIDTH",    '1920'
+            buildConfigField "int", "H264_HEIGHT",   '1080'
+            buildConfigField "String", "H264_DATA",  '"twitch_sync_footage_v1.h264"'
+            buildConfigField "String", "H264_INDEX", '"twitch_sync_footage_v1.index"'
+            isDefault true
+        }
+    }
+
+    publishing {
+        singleVariant('benchmarkRelease') {
+            publishApk()        // For application
+        }
+        singleVariant('ios9Release')
+        singleVariant('ios10Release')
+        singleVariant('ios14Release')
+        singleVariant('mix2Release')
+        singleVariant('m1Release')
+    }
+}
+
+// Jenkins will provide the property when doing release
+if (project.hasProperty('signStoreFile')) {
+    android.signingConfigs.splashtop {
+        storeFile rootProject.file(signStoreFile)
+        storePassword signStorePassword
+        keyAlias signKeyAlias
+        keyPassword signKeyPassword
+    }
+}
+
+dependencies {
+    //implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+
+    implementation 'org.slf4j:slf4j-api:2.0.7'
+    implementation 'com.github.tony19:logback-android:3.0.0'
+
+    testImplementation 'junit:junit:4.13.2'
+    testImplementation 'androidx.test:core:1.5.0'
+    testImplementation 'org.mockito:mockito-core:5.6.0'
+
+    // Print log stdout for junit test
+    testImplementation 'ch.qos.logback:logback-core:1.4.14'
+    testImplementation 'ch.qos.logback:logback-classic:1.4.14'
+
+    androidTestImplementation 'org.mockito:mockito-android:5.6.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test:rules:1.5.0'
+    androidTestImplementation 'androidx.test:runner:1.5.2'
+
+    // Print log stdout for androidTest
+    androidTestImplementation 'com.github.tony19:logback-android:3.0.0'
+}
+
+afterEvaluate {
+    println("components.size: " + components.size())
+    println("components: " + components*.name)
+    publishing {
+        publications {
+            release(MavenPublication) { publication ->
+                groupId project.group
+                artifactId project.name
+                from components.benchmarkRelease
+            }
+        }
+    }
+}
