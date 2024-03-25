@@ -297,6 +297,8 @@ public class DecoderMediaCodec extends Decoder {
                                     SystemClock.uptimeMillis());
                         }
 
+                        sLogger.info("Index=" + index + " , allowDraw=" + allowDraw);
+
                         t = traceBegin(DecoderMediaCodec.this.hashCode() + " releaseOutputBuffer");
                         mMediaCodec.releaseOutputBuffer(index, allowDraw);
                         totalRelease += traceEnd(t);
