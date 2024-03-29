@@ -129,6 +129,8 @@ public class DecoderMediaCodec extends Decoder {
                     Range<Integer> range = videoCapabilities.getSupportedFrameRates();
                     int maxCodecLevel = 0;
                     StringBuilder s = new StringBuilder();
+
+                    s.append(" isHardwareAccelerated=").append(codecInfo.isHardwareAccelerated());
                     s.append(" name=<").append(codecInfo.getName()).append(">");
                     s.append(" width=<").append(videoCapabilities.getSupportedWidths()).append(">");
                     s.append(" heights=<").append(videoCapabilities.getSupportedHeights()).append(">");
@@ -162,7 +164,11 @@ public class DecoderMediaCodec extends Decoder {
             if (ENABLE_ROTATION && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 fmt.setInteger(MediaFormat.KEY_ROTATION, videoInfo.rotate);
             }
+            //mediaFormat.setInteger(MediaFormat.KEY_FRAME_RATE, FRAME_RATE);
+
             sLogger.debug("{} MediaFormat:{}", DecoderMediaCodec.this.hashCode(), fmt);
+
+            // sLogger.debug("JRC MediaFormat:KEY_ALLOW_FRAM_DROP{}", fmt.getInteger(MediaFormat.KEY_ALLOW_FRAME_DROP));
 
             sLogger.info("{} config and start with surface:{}", DecoderMediaCodec.this.hashCode(), mSurface);
             mMediaCodec.configure(fmt, mSurface, null, 0);
@@ -179,7 +185,8 @@ public class DecoderMediaCodec extends Decoder {
                 while (true) {
                     long t = traceBegin(DecoderMediaCodec.this.hashCode() + " dequeueInputBuffer");
                     int index = mMediaCodec.dequeueInputBuffer(-1);
-                    totalDequeue += traceEnd(t);
+                    Long thisDequeue = traceEnd(t);
+                    totalDequeue += thisDequeue;
                     if (index < 0) {
                         throw new AssertionError("Failed to dequeue input buffer index:" + index);
                     }
@@ -201,14 +208,20 @@ public class DecoderMediaCodec extends Decoder {
                         sLogger.info("{} got EOS", DecoderMediaCodec.this.hashCode());
                         break;
                     }
-                    if (ENABLE_DUMP_ALL_FRAMES || count <= DUMP_FRAME_COUNT) {
-                        sLogger.trace("{} INPUT  count:{} index:{} offset:{} size:{} pts:{} flags:{} uptimeMillis:{}",
+                    // if (ENABLE_DUMP_ALL_FRAMES || count <= DUMP_FRAME_COUNT) {
+                    //     sLogger.trace("{} INPUT  count:{} index:{} offset:{} size:{} pts:{} flags:{} uptimeMillis:{}",
+                    //             DecoderMediaCodec.this.hashCode(),
+                    //             count, index,
+                    //             bufferInfo.offset, bufferInfo.size, bufferInfo.pts, bufferInfo.flags,
+                    //             SystemClock.uptimeMillis());
+                    //     //sLogger.trace("buffer:\n" + dumpByteArray(out.array(), info.offset, Math.min(info.size, 64)));
+                    // }
+
+                    sLogger.info("JRC {} INPUT  count:{} index:{} offset:{} size:{} pts:{} flags:{} uptimeMillis:{}",
                                 DecoderMediaCodec.this.hashCode(),
                                 count, index,
                                 bufferInfo.offset, bufferInfo.size, bufferInfo.pts, bufferInfo.flags,
                                 SystemClock.uptimeMillis());
-                        //sLogger.trace("buffer:\n" + dumpByteArray(out.array(), info.offset, Math.min(info.size, 64)));
-                    }
 
                     int flags  = 0;
                     switch (bufferInfo.flags) {
@@ -224,13 +237,22 @@ public class DecoderMediaCodec extends Decoder {
                     // if pts interval have jitter MediaCodec will not output anything
                     t = traceBegin(DecoderMediaCodec.this.hashCode() + " queueInputBuffer");
                     mMediaCodec.queueInputBuffer(index, bufferInfo.offset, bufferInfo.size, bufferInfo.pts, flags);
-                    totalEnqueue += traceEnd(t);
+                    // sLogger.info("JRC queueInputBuffer pts: {}", bufferInfo.pts);
+                    Long thisEnqueue = traceEnd(t);
+
+                    sLogger.debug(String.format(Locale.US, "JRC %d INPUT  count:%d dequeue:%.6fs, enqueue:%.6fs",
+                                 DecoderMediaCodec.this.hashCode(),
+                                 count,
+                                 thisDequeue / 1000000000.0,
+                                 thisEnqueue / 1000000000.0));
+
+                    totalEnqueue += thisEnqueue;//traceEnd(t);
                     count++;
                 }
             } catch (Exception ex) {
                 sLogger.warn("Failed to input - {}", ex.getMessage());
             }
-            sLogger.debug(String.format(Locale.US, "%d INPUT  total:%d dequeue:%.6fs avg:%.6fs enqueue:%.6fs avg:%.6fs",
+            sLogger.debug(String.format(Locale.US, "JRC %d INPUT  total:%d dequeue:%.6fs avg:%.6fs enqueue:%.6fs avg:%.6fs",
                     DecoderMediaCodec.this.hashCode(),
                     count,
                     totalDequeue / 1000000000.0, count > 0 ? totalDequeue / count / 1000000000.0 : 0,
@@ -264,17 +286,25 @@ public class DecoderMediaCodec extends Decoder {
             try {
                 while (!mRequestQuit) {
                     long t = traceBegin(DecoderMediaCodec.this.hashCode() + " dequeueOutputBuffer");
+                    // sLogger.info("JRC calling dequeueOutputBuffer:  uptimeMillis:" + SystemClock.uptimeMillis());
                     int index = mMediaCodec.dequeueOutputBuffer(info, -1);
-                    totalDequeue += traceEnd(t);
+                    long thisDequeue = traceEnd(t);
+                    
+                    totalDequeue += thisDequeue;
 
                     if (index >= 0) { // Index of an output buffer that has been successfully decoded
-                        if (ENABLE_DUMP_ALL_FRAMES || count <= DUMP_FRAME_COUNT) {
-                            sLogger.trace("{} OUTPUT count:{} index:{} offset:{} size:{} pts:{} flags:{} uptimeMillis:{}",
-                                    DecoderMediaCodec.this.hashCode(),
-                                    count, index,
-                                    info.offset, info.size, info.presentationTimeUs, info.flags,
-                                    SystemClock.uptimeMillis());
-                        }
+                        // if (ENABLE_DUMP_ALL_FRAMES || count <= DUMP_FRAME_COUNT) {
+                        //     sLogger.trace("{} OUTPUT count:{} index:{} offset:{} size:{} pts:{} flags:{} uptimeMillis:{}",
+                        //             DecoderMediaCodec.this.hashCode(),
+                        //             count, index,
+                        //             info.offset, info.size, info.presentationTimeUs, info.flags,
+                        //             SystemClock.uptimeMillis());
+                        // }
+                        sLogger.info("{} OUTPUT count:{} index:{} offset:{} size:{} pts:{} flags:{} uptimeMillis:{}",
+                                     DecoderMediaCodec.this.hashCode(),
+                                     count, index,
+                                     info.offset, info.size, info.presentationTimeUs, info.flags,
+                                     SystemClock.uptimeMillis());
 
                         ByteBuffer buffer;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -282,28 +312,59 @@ public class DecoderMediaCodec extends Decoder {
                         } else {
                             buffer = mMediaCodec.getOutputBuffers()[index];
                         }
-                        VideoBufferInfo bufferInfo = new VideoBufferInfo();
-                        bufferInfo.offset = info.offset;
-                        bufferInfo.size = info.size;
-                        bufferInfo.pts = info.presentationTimeUs;
-                        bufferInfo.flags = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) > 0 ? VideoBufferInfo.FLAG_EOS : VideoBufferInfo.FLAG_FRAME;
-                        boolean allowDraw = writeOutputBuffer(bufferInfo, buffer);
-                        if (ENABLE_DUMP_ALL_FRAMES || count <= DUMP_FRAME_COUNT) {
-                            sLogger.trace("{} {} count:{} index:{} pts:{} uptimeMillis:{}",
+                        // sLogger.info("JRC getOutputBuffers:  uptimeMillis:" + SystemClock.uptimeMillis());
+
+                        // VideoBufferInfo bufferInfo = new VideoBufferInfo();
+                        // bufferInfo.offset = info.offset;
+                        // bufferInfo.size = info.size;
+                        // bufferInfo.pts = info.presentationTimeUs;
+                        // bufferInfo.flags = (info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) > 0 ? VideoBufferInfo.FLAG_EOS : VideoBufferInfo.FLAG_FRAME;
+                        // boolean allowDraw = writeOutputBuffer(bufferInfo, buffer);
+                        // if (ENABLE_DUMP_ALL_FRAMES || count <= DUMP_FRAME_COUNT) {
+                        //     sLogger.info("JRC dequeueOutputBuffer:  {} {} count:{} index:{} pts:{} uptimeMillis:{}",
+                        //             DecoderMediaCodec.this.hashCode(),
+                        //             allowDraw ? "DRAW  " : "DROP  ",
+                        //             count, index,
+                        //             info.presentationTimeUs,
+                        //             SystemClock.uptimeMillis());
+                        // }
+
+                        // sLogger.info("dequeueOutputBuffer:  Index=" + index + " , allowDraw=" + allowDraw);
+//                        System.nanoTime() / 1000000;
+
+                        sLogger.info("JRC dequeueOutputBuffer:  {} DRAW count:{} index:{} pts:{} uptimeMillis:{}",
                                     DecoderMediaCodec.this.hashCode(),
-                                    allowDraw ? "DRAW  " : "DROP  ",
                                     count, index,
                                     info.presentationTimeUs,
                                     SystemClock.uptimeMillis());
-                        }
-
-                        sLogger.info("Index=" + index + " , allowDraw=" + allowDraw);
 
                         t = traceBegin(DecoderMediaCodec.this.hashCode() + " releaseOutputBuffer");
-                        mMediaCodec.releaseOutputBuffer(index, allowDraw);
-                        totalRelease += traceEnd(t);
-                        count++;
+                        mMediaCodec.releaseOutputBuffer(index, info.presentationTimeUs * 1000);
+                        // sLogger.info("JRC releaseOutputBuffer:  1.uptimeMillis {}, 2.delta {}" , 
+                        //               SystemClock.uptimeMillis(),SystemClock.uptimeMillis()-last_release);
 
+                        // last_release = SystemClock.uptimeMillis();
+                        // mMediaCodec.releaseOutputBuffer(index, allowDraw);
+                        // if(count%2 == 0)
+                        // {
+                        //     mMediaCodec.releaseOutputBuffer(index, allowDraw);
+                        //     sLogger.info("JRC dequeueOutputBuffer:  Index=" + index + " , allowDraw=" + allowDraw);
+                        // }
+                        // else
+                        // {
+                        //     mMediaCodec.releaseOutputBuffer(index, false);
+                        //     sLogger.info("JRC dequeueOutputBuffer: drop here Index=" + index + " , allowDraw=" + allowDraw);
+                        // }
+
+                        long thisRelease = traceEnd(t); 
+                        sLogger.debug(String.format(Locale.US, "JRC %d OUTPUT count:%d dequeue:%.6fs, release:%.6fs",
+                                    DecoderMediaCodec.this.hashCode(),
+                                    count,
+                                    totalDequeue / 1000000000.0, 
+                                    thisRelease / 1000000000.0));
+                        
+                        totalRelease += thisRelease;             
+                        count++;
                         if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) > 0) {
                             sLogger.info("{} EOS received, exit output loop", DecoderMediaCodec.this.hashCode());
                             break;
@@ -325,6 +386,10 @@ public class DecoderMediaCodec extends Decoder {
                                 height = fmt.getInteger("crop-bottom") + 1 - fmt.getInteger("crop-top");
                             }
                             sLogger.trace("{} INFO_OUTPUT_FORMAT_CHANGED mime:{} width:{} height:{} fmt:<{}>", DecoderMediaCodec.this.hashCode(), mime, width, height, fmt);
+                            
+                            // sLogger.debug("JRC INFO_OUTPUT_FORMAT_CHANGED MediaFormat:KEY_ALLOW_FRAM_DROP{}", fmt.getInteger(MediaFormat.KEY_ALLOW_FRAME_DROP));
+
+                            
                             VideoFormat videoInfo = new VideoFormat();
                             videoInfo.width = width;
                             videoInfo.height = height;
@@ -341,7 +406,7 @@ public class DecoderMediaCodec extends Decoder {
                 sLogger.warn("Failed to output - {}", ex.getMessage());
             }
             writeOutputEnd();
-            sLogger.debug(String.format(Locale.US, "%d OUTPUT total:%d dequeue:%.6fs avg:%.6fs release:%.6fs avg:%.6fs",
+            sLogger.debug(String.format(Locale.US, "JRC %d OUTPUT total:%d dequeue:%.6fs avg:%.6fs release:%.6fs avg:%.6fs",
                     DecoderMediaCodec.this.hashCode(),
                     count,
                     totalDequeue / 1000000000.0, totalDequeue / count / 1000000000.0,
