@@ -1,5 +1,9 @@
 package com.splashtop.demo;
 
+import static android.os.SystemClock.sleep;
+import static android.view.Surface.CHANGE_FRAME_RATE_ALWAYS;
+
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -26,6 +30,16 @@ public class SessionSurfaceView extends Session implements SurfaceHolder.Callbac
         sLogger.trace("decoder:{} view:{}", decoder, view);
         mSurfaceView = view;
         mSurfaceView.getHolder().addCallback(this);
+
+        SurfaceHolder holder = mSurfaceView.getHolder();
+        try {
+            sLogger.info("JRC calling setFrameRate.");
+            holder.getSurface().setFrameRate(60f, Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE,CHANGE_FRAME_RATE_ALWAYS);
+            sLogger.info("JRC surface:setFrameRate is done.");
+        } catch (Exception e) {
+            // Tolerate buggy codecs
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -38,13 +52,16 @@ public class SessionSurfaceView extends Session implements SurfaceHolder.Callbac
     @Override // SurfaceHolder.Callback
     public void surfaceCreated(@NonNull SurfaceHolder holder) {
         sLogger.trace("surface:{}", holder.getSurface());
+        //holder.setFormat(PixelFormat.RGBA_8888);
+//        holder.setFixedSize(mSurfaceWidth,mSurfaceHeight);
+
         postSurfaceCreate(holder.getSurface());
     }
 
     @Override // SurfaceHolder.Callback
     public void surfaceChanged(@NonNull SurfaceHolder holder, int format, int width, int height) {
         sLogger.trace("surface:{} format:{} width:{} height:{}", holder.getSurface(), format, width, height);
-        // DO NOT call onSurfaceSize(), or else will run into infinite loop
+        // DO NOT call onSurfaceSize(), or else will run into infinite loop        
     }
 
     @Override // SurfaceHolder.Callback
@@ -76,6 +93,9 @@ public class SessionSurfaceView extends Session implements SurfaceHolder.Callbac
         int height = bottom - top;
         if (width == oldWidth && height == oldHeight) return;
         onSurfaceSize(width, height);
+
+//        sleep(4000);
+//        sLogger.info("JRC onLayoutChange sleep for 4s");
     }
 
     private void onSurfaceSize(int width, int height) {
@@ -84,6 +104,8 @@ public class SessionSurfaceView extends Session implements SurfaceHolder.Callbac
 
         mSurfaceWidth = width;
         mSurfaceHeight = height;
+
+        sLogger.trace("before calling invalidateInUiThread, mSurfaceWidth:{} mSurfaceHeight:{}", mSurfaceWidth, mSurfaceHeight);
         invalidateInUiThread();
     }
 

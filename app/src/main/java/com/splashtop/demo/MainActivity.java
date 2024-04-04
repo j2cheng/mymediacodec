@@ -1,10 +1,15 @@
 package com.splashtop.demo;
 
+import android.content.Context;
 import android.graphics.Rect;
+import android.opengl.GLES10;
+import android.opengl.GLES20;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.view.Display;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
@@ -40,6 +45,28 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        //testing only
+        {
+            Display display = ((WindowManager) getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+            float refreshRating = display.getRefreshRate();
+            sLogger.info("JRC onCreate refreshRating {}",refreshRating);
+
+            if (GLES20.glGetString(GLES20.GL_RENDERER) == null ||
+                GLES20.glGetString(GLES20.GL_VENDOR) == null ||
+                GLES20.glGetString(GLES20.GL_VERSION) == null ||
+                GLES20.glGetString(GLES20.GL_EXTENSIONS) == null ||
+                GLES10.glGetString(GLES10.GL_RENDERER) == null ||
+                GLES10.glGetString(GLES10.GL_VENDOR) == null ||
+                GLES10.glGetString(GLES10.GL_VERSION) == null ||
+                GLES10.glGetString(GLES10.GL_EXTENSIONS) == null) {
+                // try to use SurfaceView
+                sLogger.info("JRC onCreate try to use SurfaceView ");
+            } else {
+                // try to use TextureView
+                sLogger.info("JRC onCreate try to use TextureView ");
+            }
+        }
 
         mSessionLayout = new SessionLayout(getApplicationContext(), new SessionLayout.SizeCallback() {
             @Override

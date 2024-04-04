@@ -114,6 +114,7 @@ android {
         singleVariant('mix2Release')
         singleVariant('m1Release')
     }
+    ndkVersion '26.2.11394342'
 }
 
 // Jenkins will provide the property when doing release

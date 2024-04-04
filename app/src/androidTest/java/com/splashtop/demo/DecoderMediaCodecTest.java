@@ -202,6 +202,8 @@ public class DecoderMediaCodecTest {
 
         // Prepare decoder, assemble with video input and output callback
         // The decoder actually works in surface mode, output callback just for decide draw or not onto the surface
+        sLogger.info("JRC test create decoder and calling attachSurface");
+
         DecoderOutput out = spy(new DecoderOutput.Wrapper(output));
         Decoder decoder = new DecoderMediaCodec(ctx)
                 .setInput(input)
