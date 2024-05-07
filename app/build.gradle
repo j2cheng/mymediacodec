@@ -27,15 +27,15 @@ android {
     buildFeatures {
         viewBinding true
     }
-
-    lintOptions {
-        checkReleaseBuilds false
-        abortOnError false
-    }
-
     packagingOptions {
-        exclude "META-INF/*"
+        jniLibs {
+            excludes += ['META-INF/*']
+        }
+        resources {
+            excludes += ['META-INF/*']
+        }
     }
+
 
     signingConfigs {
         splashtop {}
@@ -115,6 +115,10 @@ android {
         singleVariant('m1Release')
     }
     ndkVersion '26.2.11394342'
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
 }
 
 // Jenkins will provide the property when doing release

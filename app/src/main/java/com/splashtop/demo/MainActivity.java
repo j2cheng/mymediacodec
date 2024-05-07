@@ -7,6 +7,8 @@ import android.opengl.GLES20;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
+import android.view.Choreographer;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
@@ -27,7 +29,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Choreographer.FrameCallback{
 
     private static final Logger sLogger = LoggerFactory.getLogger("ST-Demo");
 
@@ -41,6 +43,8 @@ public class MainActivity extends AppCompatActivity {
     private SessionLayout mSessionLayout;
 
     private ActivityMainBinding mBinding;
+    private Choreographer choreographer;
+    private long tick = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +70,8 @@ public class MainActivity extends AppCompatActivity {
                 // try to use TextureView
                 sLogger.info("JRC onCreate try to use TextureView ");
             }
+
+            choreographer = Choreographer.getInstance();
         }
 
         mSessionLayout = new SessionLayout(getApplicationContext(), new SessionLayout.SizeCallback() {
@@ -109,15 +115,21 @@ public class MainActivity extends AppCompatActivity {
         mBinding.buttonSurfaceview.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                sLogger.info("JRC buttonSurfaceview.setOnClickListener");
+
                 FragmentSessionBinding binding = FragmentSessionBinding.inflate(getLayoutInflater());
+                //TODO: bind to surfaceviewwindow   binding.surfaceviewwindow.setVisibility(View.VISIBLE);
                 binding.surface.setVisibility(View.VISIBLE);
+                
                 binding.texture.setVisibility(View.GONE);
                 binding.textName.setText(((Button) v).getText());
                 binding.textName.bringToFront();
 
                 final DecoderInput input = new DecoderInputAssets(getApplicationContext());
                 final Decoder decoder = new DecoderMediaCodec(getApplicationContext()).setInput(input);
+                //TODO: bind to surfaceviewwindow final SessionSurfaceView session = new SessionSurfaceView(decoder, binding.surfaceviewwindow);
                 final SessionSurfaceView session = new SessionSurfaceView(decoder, binding.surface);
+                
                 session.setOnStopListener(mOnStopListener);
                 addSession(session, binding.getRoot());
 
@@ -135,7 +147,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 FragmentSessionBinding binding = FragmentSessionBinding.inflate(getLayoutInflater());
+                //TODO: bind to surfaceviewwindow binding.surfaceviewwindow.setVisibility(View.GONE);
                 binding.surface.setVisibility(View.GONE);
+
                 binding.texture.setVisibility(View.VISIBLE);
                 binding.textName.setText(((Button) v).getText());
                 binding.textName.bringToFront();
@@ -158,7 +172,9 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 FragmentSessionBinding binding = FragmentSessionBinding.inflate(getLayoutInflater());
+                //TODO: bind to surfaceviewwindow binding.surfaceviewwindow.setVisibility(View.GONE);
                 binding.surface.setVisibility(View.GONE);
+                
                 binding.texture.setVisibility(View.GONE);
                 binding.textName.setText(((Button) v).getText());
                 binding.textName.bringToFront();
@@ -202,6 +218,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         }, 1000);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        // Your code to handle onDestroy event
+        sLogger.info("JRC onDestroy");
     }
 
     private void addSession(Session session, View view) {
@@ -254,4 +277,71 @@ public class MainActivity extends AppCompatActivity {
             invalidateButton();
         }
     };
+
+//implements Choreographer.FrameCallback
+    @Override
+    protected void onResume() {
+        super.onResume();
+        choreographer.postFrameCallback(this);
+        sLogger.info("JRC onResume: postFrameCallback {}", SystemClock.uptimeMillis());
+
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        choreographer.removeFrameCallback(this);
+        sLogger.info("JRC onPause removeFrameCallback: {}", SystemClock.uptimeMillis());
+
+    }
+
+    @Override
+    public void doFrame(long frameTimeNanos) {
+        // This method will be called on every vsync.
+        // Perform your rendering or other tasks here.
+        // Remember to schedule the next vsync callback.
+        choreographer.postFrameCallback(this);
+        // sLogger.info("JRC doFrame frameTimeNanos:{}..{}, postFrameCallback: {}", 
+        //               frameTimeNanos,
+        //               frameTimeNanos/1000000, 
+        //               SystemClock.uptimeMillis());
+
+        tick++;
+
+        if(tick%60 == 0)
+        {
+            sLogger.info("JRC doFrame frameTimeNanos:{}..{}, postFrameCallback: {}, tick: {}", 
+                      frameTimeNanos,
+                      frameTimeNanos/1000000, 
+                      SystemClock.uptimeMillis(),
+                      tick);
+        }//else
+
+        if(tick == 300)
+        {
+            sLogger.info("JRC click surfaceviewwindow button up");
+
+            Button buttonFoo = (Button)findViewById(R.id.button_surfaceview);
+            sLogger.info("JRC click buttonFoo: {}",buttonFoo);
+
+            buttonFoo.performClick();
+
+            sLogger.info("JRC click surfaceviewwindow button down");
+        }//else
+
+
+        if(tick == 400)
+        {
+            sLogger.info("JRC click button_start_stop button up");
+
+            Button buttonFoo = (Button)findViewById(R.id.button_start_stop);
+            sLogger.info("JRC click buttonFoo: {}",buttonFoo);
+
+            buttonFoo.performClick();
+
+            sLogger.info("JRC click button_start_stop button down");
+        }//else
+
+        
+    }
 }

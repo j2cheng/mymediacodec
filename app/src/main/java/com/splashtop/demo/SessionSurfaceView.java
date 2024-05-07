@@ -3,6 +3,8 @@ package com.splashtop.demo;
 import static android.os.SystemClock.sleep;
 import static android.view.Surface.CHANGE_FRAME_RATE_ALWAYS;
 
+import android.graphics.PixelFormat;
+import android.os.Looper;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -31,15 +33,15 @@ public class SessionSurfaceView extends Session implements SurfaceHolder.Callbac
         mSurfaceView = view;
         mSurfaceView.getHolder().addCallback(this);
 
-        SurfaceHolder holder = mSurfaceView.getHolder();
-        try {
-            sLogger.info("JRC calling setFrameRate.");
-            holder.getSurface().setFrameRate(60f, Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE,CHANGE_FRAME_RATE_ALWAYS);
-            sLogger.info("JRC surface:setFrameRate is done.");
-        } catch (Exception e) {
-            // Tolerate buggy codecs
-            e.printStackTrace();
-        }
+        // SurfaceHolder holder = mSurfaceView.getHolder();
+        // try {
+        //     sLogger.info("JRC calling setFrameRate.");
+        //     holder.getSurface().setFrameRate(60f, Surface.FRAME_RATE_COMPATIBILITY_FIXED_SOURCE,CHANGE_FRAME_RATE_ALWAYS);
+        //     sLogger.info("JRC surface:setFrameRate is done.");
+        // } catch (Exception e) {
+        //     // Tolerate buggy codecs
+        //     e.printStackTrace();
+        // }
     }
 
     @Override
@@ -54,7 +56,11 @@ public class SessionSurfaceView extends Session implements SurfaceHolder.Callbac
         sLogger.trace("surface:{}", holder.getSurface());
         //holder.setFormat(PixelFormat.RGBA_8888);
 //        holder.setFixedSize(mSurfaceWidth,mSurfaceHeight);
+       // holder.setFormat(PixelFormat.OPAQUE);
+       // sLogger.info("JRC surfaceCreated: set to OPAQUE");
 
+        sLogger.info("JRC surfaceCreated: isCurrentThread: {}", Looper.getMainLooper().isCurrentThread());
+        
         postSurfaceCreate(holder.getSurface());
     }
 

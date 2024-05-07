@@ -87,9 +87,6 @@ public class Session implements DecoderOutput {
 
     protected void postSurfaceCreate(Surface surface) {
         sLogger.trace("surface:{}", surface);
-
-        sLogger.info("JRC session postSurfaceCreate calling attachSurface");
-
         mDecoder.attachSurface(surface);
     }
 
