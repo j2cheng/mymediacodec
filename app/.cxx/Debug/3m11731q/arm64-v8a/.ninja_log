@@ -1,0 +1,3 @@
+# ninja log v5
+0	71	1715462841939104267	CMakeFiles/mediacodec.dir/mediacodec.cpp.o	ee819d9526525a80
+72	125	1715462841995104742	/home/builduser/AndroidStudioProjects/proto-mediacodec-master/app/build/intermediates/cxx/Debug/3m11731q/obj/arm64-v8a/libmediacodec.so	360d33dec047f5aa
