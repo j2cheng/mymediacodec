@@ -1,6 +1,9 @@
 package com.splashtop.demo;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.hardware.Camera;
+
 import android.graphics.Rect;
 import android.opengl.GLES10;
 import android.opengl.GLES20;
@@ -320,11 +323,11 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
         if(tick == 300)
         {
             sLogger.info("JRC click surfaceviewwindow button up");
-
-            Button buttonFoo = (Button)findViewById(R.id.button_surfaceview);
-            sLogger.info("JRC click buttonFoo: {}",buttonFoo);
-
-            buttonFoo.performClick();
+//TODO: if you want to press button here
+//            Button buttonFoo = (Button)findViewById(R.id.button_surfaceview);
+//            sLogger.info("JRC click buttonFoo: {}",buttonFoo);
+//
+//            buttonFoo.performClick();
 
             sLogger.info("JRC click surfaceviewwindow button down");
         }//else
@@ -332,14 +335,40 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
 
         if(tick == 400)
         {
-            sLogger.info("JRC click button_start_stop button up");
+            //TODO: if you want to press button here
+            sLogger.info("JRC skip click button_start_stop button up");
+//
+//            Button buttonFoo = (Button)findViewById(R.id.button_start_stop);
+//            sLogger.info("JRC click buttonFoo: {}",buttonFoo);
+//
+//            buttonFoo.performClick();
+//
+//            sLogger.info("JRC click button_start_stop button down");
 
-            Button buttonFoo = (Button)findViewById(R.id.button_start_stop);
-            sLogger.info("JRC click buttonFoo: {}",buttonFoo);
+            if (getApplicationContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA)){
+                // this device has a camera
+                //return true;
+                sLogger.info("JRC this device has camera FEATURE_CAMERA");
 
-            buttonFoo.performClick();
+                int camCnt = Camera.getNumberOfCameras();
+                sLogger.info("JRC this device has {} camera",camCnt);
 
-            sLogger.info("JRC click button_start_stop button down");
+                Camera c = null;
+                try {
+                    c = Camera.open(); // attempt to get a Camera instance
+                }
+                catch (Exception e){
+                    // Camera is not available (in use or does not exist)
+                }
+                //return c; // returns null if camera is unavailable
+                sLogger.info("JRC open {} camera",c);
+
+            } else {
+                // no camera on this device
+                //return false;
+                sLogger.info("JRC no camera on this device");
+            }
+
         }//else
 
         

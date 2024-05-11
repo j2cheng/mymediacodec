@@ -59,7 +59,7 @@ public class SessionSurfaceView extends Session implements SurfaceHolder.Callbac
        // holder.setFormat(PixelFormat.OPAQUE);
        // sLogger.info("JRC surfaceCreated: set to OPAQUE");
 
-        sLogger.info("JRC surfaceCreated: isCurrentThread: {}", Looper.getMainLooper().isCurrentThread());
+  //      sLogger.info("JRC surfaceCreated: isCurrentThread: {}", Looper.getMainLooper().isCurrentThread());
         
         postSurfaceCreate(holder.getSurface());
     }
@@ -111,7 +111,7 @@ public class SessionSurfaceView extends Session implements SurfaceHolder.Callbac
         mSurfaceWidth = width;
         mSurfaceHeight = height;
 
-        sLogger.trace("before calling invalidateInUiThread, mSurfaceWidth:{} mSurfaceHeight:{}", mSurfaceWidth, mSurfaceHeight);
+//        sLogger.trace("before calling invalidateInUiThread, mSurfaceWidth:{} mSurfaceHeight:{}", mSurfaceWidth, mSurfaceHeight);
         invalidateInUiThread();
     }
 
