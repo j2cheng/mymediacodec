@@ -1,3 +1,0 @@
-/home/builduser/AndroidStudioProjects/proto-mediacodec-master/app/.cxx/Debug/3m11731q/armeabi-v7a/CMakeFiles/mediacodec.dir
-/home/builduser/AndroidStudioProjects/proto-mediacodec-master/app/.cxx/Debug/3m11731q/armeabi-v7a/CMakeFiles/edit_cache.dir
-/home/builduser/AndroidStudioProjects/proto-mediacodec-master/app/.cxx/Debug/3m11731q/armeabi-v7a/CMakeFiles/rebuild_cache.dir

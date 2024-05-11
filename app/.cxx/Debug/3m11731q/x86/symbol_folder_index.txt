@@ -1,1 +1,0 @@
-/home/builduser/AndroidStudioProjects/proto-mediacodec-master/app/build/intermediates/cxx/Debug/3m11731q/obj/x86
