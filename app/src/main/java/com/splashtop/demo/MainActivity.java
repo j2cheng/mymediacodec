@@ -335,6 +335,8 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
 
         if(tick == 400)
         {
+            sayHello("John Cheng");
+            
             //TODO: if you want to press button here
             sLogger.info("JRC skip click button_start_stop button up");
 //
@@ -373,4 +375,11 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
 
         
     }
+//native code here
+    static {
+              System.loadLibrary("mediacodec");
+    }
+
+    // Declare an instance native method sayHello() which returns void
+    public native void sayHello(String name);
 }
