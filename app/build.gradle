@@ -5,8 +5,8 @@ version '1.4-SNAPSHOT'
 
 android {
     namespace "com.splashtop.demo"
-
     compileSdk 33
+
     compileOptions {
         targetCompatibility JavaVersion.VERSION_1_8
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -16,9 +16,9 @@ android {
         applicationId "com.splashtop.proto.mediacodec"
 
         minSdk 16
-        targetSdk 21
+        targetSdk 33
+        versionCode 123
 
-        versionCode Integer.parseInt("123")
         versionName project.version
 
         testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'

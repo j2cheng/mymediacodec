@@ -376,7 +376,7 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
                     sLogger.info("JRC Camera.open Exception");
                 }
                 //return c; // returns null if camera is unavailable
-                sLogger.info("JRC open {} camera",c);
+                sLogger.info("JRC Camera.open() got: {}",c);
                 {
                     CameraManager mCameraManager = (CameraManager)getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
 
@@ -387,6 +387,9 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
                         for (String id:cameraIds) {
                             //if (CameraId.equals(id)) {
                             sLogger.info("JRC findCamera: getCameraIdList {}" ,cameraIds);
+                            sLogger.info("JRC findCamera: id {}" ,id);
+                            
+                            openCamera(id);
                             //}
                         }
                     }
@@ -419,26 +422,32 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
     private static final int REQUEST_CAMERA_RESULT = 1;
 
 //openCamera will try to ckeck permision first
-    private String mCameraId;
-    private void openCamera() {
+    // private String mCameraId;
+    private void openCamera(String mCameraId) {
        CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
        try {
            sLogger.info("JRC mCameraId: {}, mCameraDeviceStateCallback: {}" , mCameraId ,  mCameraDeviceStateCallback);
-           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
-               if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA)
-                       == PackageManager.PERMISSION_GRANTED){
-                   sLogger.info("JRC PERMISSION_GRANTED, now call openCamera!");
-                   cameraManager.openCamera(mCameraId, mCameraDeviceStateCallback,null);
-               }
-               else {
-                   if (shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)){
-                        //    Toast.makeText(this,"No Permission to use the Camera services", Toast.LENGTH_SHORT).show();
-                        sLogger.info("JRC No Permission to use the Camera services!");
-                   }
-                   requestPermissions(new String[] {android.Manifest.permission.CAMERA},REQUEST_CAMERA_RESULT);
-               }
-           }
-           else {
+          if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+              if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA)
+                      == PackageManager.PERMISSION_GRANTED){
+                  sLogger.info("JRC PERMISSION_GRANTED, now call openCamera!");
+                  cameraManager.openCamera(mCameraId, mCameraDeviceStateCallback,null);
+              }
+              else {
+                  sLogger.info("JRC calling shouldShowRequestPermissionRationale");
+                  if (shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA))
+                  {
+                       //    Toast.makeText(this,"No Permission to use the Camera services", Toast.LENGTH_SHORT).show();
+                       sLogger.info("JRC No Permission to use the Camera services!");
+                  }
+                  requestPermissions(new String[] {android.Manifest.permission.CAMERA},REQUEST_CAMERA_RESULT);
+
+                  //for testing only
+                  //sLogger.info("JRC calling cameraManager.openCamera");
+                  //cameraManager.openCamera(mCameraId, mCameraDeviceStateCallback, null);
+              }
+          }
+          else {
                cameraManager.openCamera(mCameraId, mCameraDeviceStateCallback, null);
            }
        } catch (CameraAccessException e) {
@@ -454,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
         public void onOpened(CameraDevice camera) {
             mCameraDevice = camera;
 //            Toast.makeText(getApplicationContext(), "Camera Opened!", Toast.LENGTH_SHORT).show();
-            sLogger.info("JRC Camera Opened!");
+            sLogger.info("JRC Camera Opened: {}",mCameraDevice);
         }
 
         @Override
