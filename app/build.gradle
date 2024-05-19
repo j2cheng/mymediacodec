@@ -16,7 +16,7 @@ android {
         applicationId "com.splashtop.proto.mediacodec"
 
         minSdk 16
-        targetSdk 33
+        targetSdk 21
 
         versionCode Integer.parseInt("123")
         versionName project.version

@@ -18,8 +18,10 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.UiThread;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import com.splashtop.demo.databinding.ActivityMainBinding;
 import com.splashtop.demo.databinding.FragmentSessionBinding;
@@ -31,6 +33,14 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.params.StreamConfigurationMap;
 
 public class MainActivity extends AppCompatActivity implements Choreographer.FrameCallback{
 
@@ -332,6 +342,7 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
             sLogger.info("JRC click surfaceviewwindow button down");
         }//else
 
+        
 
         if(tick == 400)
         {
@@ -361,10 +372,31 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
                 }
                 catch (Exception e){
                     // Camera is not available (in use or does not exist)
+                    e.printStackTrace();
+                    sLogger.info("JRC Camera.open Exception");
                 }
                 //return c; // returns null if camera is unavailable
                 sLogger.info("JRC open {} camera",c);
+                {
+                    CameraManager mCameraManager = (CameraManager)getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
 
+                    try {
+                        String[] cameraIds = mCameraManager.getCameraIdList();
+                        sLogger.info("JRC findCamera: getCameraIdList length: " + cameraIds.length);
+
+                        for (String id:cameraIds) {
+                            //if (CameraId.equals(id)) {
+                            sLogger.info("JRC findCamera: getCameraIdList {}" ,cameraIds);
+                            //}
+                        }
+                    }
+                    catch (CameraAccessException e) {
+                        // TODO handle error properly or pass it on
+                        //return 0;
+                        e.printStackTrace();
+                        sLogger.info("JRC findCamera: CameraAccessException");
+                    }
+                }
             } else {
                 // no camera on this device
                 //return false;
@@ -382,4 +414,108 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
 
     // Declare an instance native method sayHello() which returns void
     public native void sayHello(String name);
+
+ //==============work with camera=================================   
+    private static final int REQUEST_CAMERA_RESULT = 1;
+
+//openCamera will try to ckeck permision first
+    private String mCameraId;
+    private void openCamera() {
+       CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+       try {
+           sLogger.info("JRC mCameraId: {}, mCameraDeviceStateCallback: {}" , mCameraId ,  mCameraDeviceStateCallback);
+           if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M){
+               if(ContextCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA)
+                       == PackageManager.PERMISSION_GRANTED){
+                   sLogger.info("JRC PERMISSION_GRANTED, now call openCamera!");
+                   cameraManager.openCamera(mCameraId, mCameraDeviceStateCallback,null);
+               }
+               else {
+                   if (shouldShowRequestPermissionRationale(android.Manifest.permission.CAMERA)){
+                        //    Toast.makeText(this,"No Permission to use the Camera services", Toast.LENGTH_SHORT).show();
+                        sLogger.info("JRC No Permission to use the Camera services!");
+                   }
+                   requestPermissions(new String[] {android.Manifest.permission.CAMERA},REQUEST_CAMERA_RESULT);
+               }
+           }
+           else {
+               cameraManager.openCamera(mCameraId, mCameraDeviceStateCallback, null);
+           }
+       } catch (CameraAccessException e) {
+           e.printStackTrace();
+       }
+    }
+
+    private CameraDevice mCameraDevice;
+    private CameraDevice.StateCallback mCameraDeviceStateCallback
+            = new CameraDevice.StateCallback() {
+
+        @Override
+        public void onOpened(CameraDevice camera) {
+            mCameraDevice = camera;
+//            Toast.makeText(getApplicationContext(), "Camera Opened!", Toast.LENGTH_SHORT).show();
+            sLogger.info("JRC Camera Opened!");
+        }
+
+        @Override
+        public void onDisconnected(CameraDevice camera) {
+            camera.close();
+            mCameraDevice = null;
+        }
+
+        @Override
+        public void onError(CameraDevice camera, int error) {
+            camera.close();
+            mCameraDevice = null;
+        }
+    };
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, 
+                                        @NonNull String[] permissions,
+                                        @NonNull int[] grantResults) 
+    { 
+        super.onRequestPermissionsResult(requestCode, 
+                                        permissions, 
+                                        grantResults); 
+ 
+        if (requestCode == REQUEST_CAMERA_RESULT) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) { 
+                sLogger.info("JRC Camera Permission Granted"); 
+            } 
+            else { 
+                sLogger.info("JRC Camera Permission Denied"); 
+            } 
+        } 
+//        else if (requestCode == STORAGE_PERMISSION_CODE) {
+//            if (grantResults.length > 0
+//                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+//                    sLogger.info("JRC Storage Permission Granted");
+//            } else {
+//                sLogger.info("JRC Storage Permission Denied");
+//            }
+//        }
+
+//        switch (requestCode){
+//            case  REQUEST_CAMERA_RESULT:
+//                if (grantResults[0] != PackageManager.PERMISSION_GRANTED){
+//                    Toast.makeText(this, "Cannot run application because camera service permission have not been granted", Toast.LENGTH_SHORT).show();
+//                }
+//                break;
+//            default:
+//                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+//                break;
+//        }
+    } 
+    // for(String cameraId : cameraManager.getCameraIdList()) {
+    //     CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
+    //     if (cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) ==
+    //             CameraCharacteristics.LENS_FACING_FRONT) {
+    //         continue;
+    //     }
+    //     StreamConfigurationMap map = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+    //     mPreviewSize = getPreferredPreviewSize(map.getOutputSizes(SurfaceTexture.class), width, height);
+    //     mCameraId = cameraId;
+    //     return;
+    // }
 }
