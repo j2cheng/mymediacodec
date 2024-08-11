@@ -21,9 +21,14 @@
 #include <jni.h>        // JNI header provided by JDK
 #include <stdio.h>      // C Standard IO Header
 //#include "mediacodec.h"   // Generated
+#include <android/log.h>
+#define TAG "mediacodec"
 
 // Implementation of the native method sayHello()
 extern "C" JNIEXPORT void JNICALL Java_com_splashtop_demo_MainActivity_sayHello(JNIEnv *env, jobject thisObj,jstring arg) {
-   printf("Hello World!\n");//ToString(env, arg)
-   return;
+//    __android_log_printf   printf("mediacodec printf Hello World!\n");//ToString(env, arg)
+    __android_log_print(ANDROID_LOG_DEBUG,TAG,"mediacodec __android_log_print Hello World!\n");
+    printf("mediacodec printf Hello World!\n");//ToString(env, arg)
+
+    return;
 }
