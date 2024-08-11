@@ -5,6 +5,9 @@ import android.content.pm.PackageManager;
 import android.hardware.Camera;
 
 import android.graphics.Rect;
+import android.media.MediaCodecList;
+import android.media.MediaCodecInfo;
+
 import android.opengl.GLES10;
 import android.opengl.GLES20;
 import android.os.Build;
@@ -13,6 +16,7 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.view.Choreographer;
 import android.view.Display;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
@@ -41,6 +45,7 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CaptureRequest;
 import android.hardware.camera2.params.StreamConfigurationMap;
+import android.graphics.ImageFormat;
 
 public class MainActivity extends AppCompatActivity implements Choreographer.FrameCallback{
 
@@ -366,9 +371,19 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
                 int camCnt = Camera.getNumberOfCameras();
                 sLogger.info("JRC this device has {} camera",camCnt);
 
-                Camera c = null;
+                Camera mCamera = null;
                 try {
-                    c = Camera.open(); // attempt to get a Camera instance
+//                    c = Camera.open(); // attempt to get a Camera instance
+
+                    mCamera = Camera.open();;
+                    List<Integer> i = mCamera.getParameters().getSupportedPreviewFormats();//   Parameters().getSupportedPreviewFormats();
+                    sLogger.info("JRC return values from getParameters().SupportedPreviewFormats {} ",i);
+
+                    sLogger.info("JRC static value android.graphics.ImageFormat.YUY2 {} ",ImageFormat.YUY2);
+                    sLogger.info("JRC static value android.graphics.ImageFormat.YV12 {} ",ImageFormat.YV12);
+                    sLogger.info("JRC static value android.graphics.ImageFormat.NV21 {} ",ImageFormat.NV21);
+                    sLogger.info("JRC static value android.graphics.ImageFormat.PRIVATE {} ", ImageFormat.PRIVATE);
+
                 }
                 catch (Exception e){
                     // Camera is not available (in use or does not exist)
@@ -376,7 +391,7 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
                     sLogger.info("JRC Camera.open Exception");
                 }
                 //return c; // returns null if camera is unavailable
-                sLogger.info("JRC Camera.open() got: {}",c);
+                sLogger.info("JRC Camera.open() got: {}",mCamera);
                 {
                     CameraManager mCameraManager = (CameraManager)getApplicationContext().getSystemService(Context.CAMERA_SERVICE);
 
@@ -386,11 +401,39 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
 
                         for (String id:cameraIds) {
                             //if (CameraId.equals(id)) {
-                            sLogger.info("JRC findCamera: getCameraIdList {}" ,cameraIds);
+                            sLogger.info("JRC findCamera: getCameraIdList {}" ,id);
                             sLogger.info("JRC findCamera: id {}" ,id);
                             
-                            openCamera(id);
+//                            openCamera(id);
                             //}
+
+                            CameraManager cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
+                            CameraCharacteristics cameraCharateristics = cameraManager.getCameraCharacteristics(id);
+
+                            StreamConfigurationMap map = cameraCharateristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
+
+                            //IsOutputSupportedFor(Int32)
+                            //Determine whether or not output surfaces with a particular user-defined format can be passed
+
+//                            sLogger.info("JRC findCamera: map.isOutputSupportedFor(ImageFormat.YUV_420_888) {}" ,map.isOutputSupportedFor(ImageFormat.YUV_420_888));
+                            sLogger.info("JRC findCamera: map.isOutputSupportedFor(ImageFormat.YUY2) 20 {}" ,map.isOutputSupportedFor(20));//ImageFormat.YUY2));
+                            sLogger.info("JRC findCamera: map.isOutputSupportedFor(ImageFormat.YV12) 842094169 {}" ,map.isOutputSupportedFor(842094169));//ImageFormat.NV21));
+                            sLogger.info("JRC findCamera: map.isOutputSupportedFor(ImageFormat.NV21) 17 {}" ,map.isOutputSupportedFor(17));//ImageFormat.YV12));
+                            sLogger.info("JRC findCamera: map.isOutputSupportedFor(ImageFormat.JPEG) 256 {}" ,map.isOutputSupportedFor(256));//ImageFormat.NV12));
+
+
+                            int[] formats = map.getOutputFormats();
+
+
+                            sLogger.info("JRC findCamera: formats {}" ,formats);
+
+                            for(int f: formats)
+                            {
+                                sLogger.info("JRC findCamera: format f {}" ,f);
+                            }
+
+
+
                         }
                     }
                     catch (CameraAccessException e) {
@@ -398,6 +441,58 @@ public class MainActivity extends AppCompatActivity implements Choreographer.Fra
                         //return 0;
                         e.printStackTrace();
                         sLogger.info("JRC findCamera: CameraAccessException");
+                    }
+                }
+
+                sLogger.info("JRC print MediaCodecs List");
+                {
+                    MediaCodecList mediaCodecList = new MediaCodecList(MediaCodecList.ALL_CODECS);
+                    MediaCodecInfo[] mediaCodecInfos = mediaCodecList.getCodecInfos();
+                    for (MediaCodecInfo mediaCodecInfo: mediaCodecInfos) {
+                        boolean isEncoder = mediaCodecInfo.isEncoder();
+                        boolean isDecoder = !isEncoder;
+                        boolean show = isEncoder || isDecoder;
+                        if (!show) continue;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                            sLogger.info("JRC " + String.format("name: %s, encoder: %b hardware: %b, software: %b, vendor: %b",
+                                    mediaCodecInfo.getName(),
+                                    mediaCodecInfo.isEncoder(),
+                                    mediaCodecInfo.isHardwareAccelerated(),
+                                    mediaCodecInfo.isSoftwareOnly(),
+                                    mediaCodecInfo.isVendor())
+                            );
+                        }
+                        String[] types = mediaCodecInfo.getSupportedTypes();
+                        for (String type: types) {
+                            sLogger.info("JRC  type: " + type);
+                            MediaCodecInfo.CodecCapabilities capabilities = mediaCodecInfo.getCapabilitiesForType(type);
+                            for (int colorFormat: capabilities.colorFormats) {
+                                String colorFormatName = "unknown";
+                                switch (colorFormat) {
+                                    case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible:
+                                        colorFormatName = "YUV420Flexible";
+                                        break;
+                                    case MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface:
+                                        colorFormatName = "FormatSurface";
+                                        break;
+                                    case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420SemiPlanar:
+                                        colorFormatName = "YUV420SemiPlanar";
+                                        break;
+                                    case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedPlanar:
+                                        colorFormatName = "YUV420PackedPlanar";
+                                        break;
+                                    case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar:
+                                        colorFormatName = "YUV420PackedSemiPlanar";
+                                        break;
+                                    case MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Planar:
+                                        colorFormatName = "YUV420Planar";
+                                        break;
+
+                                }
+                                sLogger.info("JRC " +  String.format("  colorFomat: %d (%s)", colorFormat, colorFormatName));
+                            }
+
+                        }
                     }
                 }
             } else {
